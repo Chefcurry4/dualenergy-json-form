@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSSAT Field Parameters – DualEnergy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+      padding: 40px 16px;
+      color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header .logo {
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #4fc3f7;
+      margin-bottom: 10px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1rem;
+      color: #b0bec5;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 14px;
+      padding: 32px;
+      margin-bottom: 28px;
+      backdrop-filter: blur(6px);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #4fc3f7;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 .icon {
+      font-size: 1.25rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #90caf9;
+      letter-spacing: 0.4px;
+    }
+
+    label .unit {
+      font-weight: 400;
+      color: #78909c;
+      font-style: italic;
+    }
+
+    label .hint {
+      display: block;
+      font-size: 0.75rem;
+      color: #607d8b;
+      font-weight: 400;
+      margin-top: 2px;
+      font-style: normal;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 13px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 0.92rem;
+      transition: border-color 0.2s, background 0.2s;
+      outline: none;
+    }
+
+    input::placeholder { color: #546e7a; }
+
+    input:focus, select:focus {
+      border-color: #4fc3f7;
+      background: rgba(79, 195, 247, 0.08);
+    }
+
+    input.invalid {
+      border-color: #ef5350;
+    }
+
+    select option { background: #1e2d3d; color: #e0e0e0; }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+
+    .submit-area {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    button[type="submit"] {
+      background: linear-gradient(135deg, #0288d1, #26c6da);
+      color: #fff;
+      border: none;
+      padding: 15px 52px;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      box-shadow: 0 4px 20px rgba(2, 136, 209, 0.4);
+    }
+
+    button[type="submit"]:hover { opacity: 0.88; transform: translateY(-1px); }
+    button[type="submit"]:active { transform: translateY(0); }
+    button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #feedback {
+      display: none;
+      margin-top: 22px;
+      padding: 18px 24px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.97rem;
+      font-weight: 600;
+    }
+
+    #feedback.success {
+      background: rgba(76, 175, 80, 0.18);
+      border: 1px solid #4caf50;
+      color: #a5d6a7;
+    }
+
+    #feedback.error {
+      background: rgba(239, 83, 80, 0.18);
+      border: 1px solid #ef5350;
+      color: #ef9a9a;
+    }
+
+    .required-note {
+      font-size: 0.78rem;
+      color: #607d8b;
+      text-align: right;
+      margin-bottom: 8px;
+    }
+
+    .required-note span { color: #ef5350; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.5rem; }
+      .card { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <div class="logo">DualEnergy</div>
+      <h1>DSSAT Field Parameters</h1>
+      <p>
+        Fill in the form below with your crop's genetic coefficients, soil characteristics,
+        and management practices. Your data will be securely submitted as JSON.
+      </p>
+    </header>
+
+    <form id="dssatForm" novalidate>
+      <p class="required-note"><span>*</span> Required fields</p>
+
+      <!-- ── Personal Info ─────────────────────────────────────── -->
+      <div class="card">
+        <h2><span class="icon">👤</span> Personal &amp; Field Information</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="name">Full Name <span style="color:#ef5350">*</span></label>
+            <input type="text" id="name" name="name" placeholder="e.g. John Smith" required />
+          </div>
+          <div class="field">
+            <label for="email">Email Address <span style="color:#ef5350">*</span></label>
+            <input type="email" id="email" name="email" placeholder="e.g. john@company.com" required />
+          </div>
+          <div class="field">
+            <label for="company">Company / Organization <span style="color:#ef5350">*</span></label>
+            <input type="text" id="company" name="company" placeholder="e.g. AgroTech Ltd." required />
+          </div>
+          <div class="field">
+            <label for="fieldName">Field Name / ID <span style="color:#ef5350">*</span></label>
+            <input type="text" id="fieldName" name="fieldName" placeholder="e.g. North Field A1" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Crop Genetic Coefficients ─────────────────────────── -->
+      <div class="card">
+        <h2><span class="icon">🌱</span> Crop-Specific Genetic Coefficients</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="cropType">Crop Type <span style="color:#ef5350">*</span></label>
+            <select id="cropType" name="cropType" required>
+              <option value="" disabled selected>Select crop…</option>
+              <option value="MZCER">Maize (MZCER)</option>
+              <option value="WHCER">Wheat (WHCER)</option>
+              <option value="RICER">Rice (RICER)</option>
+              <option value="SBCER">Soybean (SBCER)</option>
+              <option value="SNCER">Sunflower (SNCER)</option>
+              <option value="BACER">Barley (BACER)</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="P1">
+              P1 <span class="unit">(°C·day)</span>
+              <span class="hint">Degree days from emergence to end of juvenile phase</span>
+            </label>
+            <input type="number" id="P1" name="P1" step="any" min="0" placeholder="e.g. 180" />
+          </div>
+          <div class="field">
+            <label for="P2">
+              P2 <span class="unit">(day/h)</span>
+              <span class="hint">Photoperiod sensitivity coefficient</span>
+            </label>
+            <input type="number" id="P2" name="P2" step="any" min="0" placeholder="e.g. 0.5" />
+          </div>
+          <div class="field">
+            <label for="P5">
+              P5 <span class="unit">(°C·day)</span>
+              <span class="hint">Degree days from silking to physiological maturity</span>
+            </label>
+            <input type="number" id="P5" name="P5" step="any" min="0" placeholder="e.g. 760" />
+          </div>
+          <div class="field">
+            <label for="G2">
+              G2 <span class="unit">(kernels/plant)</span>
+              <span class="hint">Maximum kernel number per plant</span>
+            </label>
+            <input type="number" id="G2" name="G2" step="any" min="0" placeholder="e.g. 750" />
+          </div>
+          <div class="field">
+            <label for="G3">
+              G3 <span class="unit">(mg/day)</span>
+              <span class="hint">Kernel filling rate during linear grain filling stage</span>
+            </label>
+            <input type="number" id="G3" name="G3" step="any" min="0" placeholder="e.g. 8.5" />
+          </div>
+          <div class="field">
+            <label for="PHINT">
+              PHINT <span class="unit">(°C·day)</span>
+              <span class="hint">Degree days required for each leaf tip to emerge</span>
+            </label>
+            <input type="number" id="PHINT" name="PHINT" step="any" min="0" placeholder="e.g. 38.9" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Soil Characteristics ───────────────────────────────── -->
+      <div class="card">
+        <h2><span class="icon">🪨</span> Soil Characteristics</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="soilSeries">Soil Series / Name</label>
+            <input type="text" id="soilSeries" name="soilSeries" placeholder="e.g. Typic Haplustept" />
+          </div>
+          <div class="field">
+            <label for="soilTexture">Soil Texture</label>
+            <select id="soilTexture" name="soilTexture">
+              <option value="" disabled selected>Select texture…</option>
+              <option value="Sand">Sand</option>
+              <option value="Loamy Sand">Loamy Sand</option>
+              <option value="Sandy Loam">Sandy Loam</option>
+              <option value="Loam">Loam</option>
+              <option value="Silt Loam">Silt Loam</option>
+              <option value="Silt">Silt</option>
+              <option value="Sandy Clay Loam">Sandy Clay Loam</option>
+              <option value="Clay Loam">Clay Loam</option>
+              <option value="Silty Clay Loam">Silty Clay Loam</option>
+              <option value="Sandy Clay">Sandy Clay</option>
+              <option value="Silty Clay">Silty Clay</option>
+              <option value="Clay">Clay</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="soilDepth">
+              Soil Depth <span class="unit">(cm)</span>
+              <span class="hint">Total soil profile depth</span>
+            </label>
+            <input type="number" id="soilDepth" name="soilDepth" step="any" min="0" placeholder="e.g. 150" />
+          </div>
+          <div class="field">
+            <label for="bulkDensity">
+              Bulk Density <span class="unit">(g/cm³)</span>
+              <span class="hint">Typical range: 1.0–1.8</span>
+            </label>
+            <input type="number" id="bulkDensity" name="bulkDensity" step="any" min="0" placeholder="e.g. 1.35" />
+          </div>
+          <div class="field">
+            <label for="fieldCapacity">
+              Field Capacity <span class="unit">(cm³/cm³)</span>
+              <span class="hint">Volumetric water content at –33 kPa</span>
+            </label>
+            <input type="number" id="fieldCapacity" name="fieldCapacity" step="any" min="0" max="1" placeholder="e.g. 0.30" />
+          </div>
+          <div class="field">
+            <label for="wiltingPoint">
+              Wilting Point <span class="unit">(cm³/cm³)</span>
+              <span class="hint">Volumetric water content at –1500 kPa</span>
+            </label>
+            <input type="number" id="wiltingPoint" name="wiltingPoint" step="any" min="0" max="1" placeholder="e.g. 0.14" />
+          </div>
+          <div class="field">
+            <label for="organicCarbon">
+              Organic Carbon <span class="unit">(%)</span>
+              <span class="hint">Soil organic carbon content</span>
+            </label>
+            <input type="number" id="organicCarbon" name="organicCarbon" step="any" min="0" placeholder="e.g. 1.2" />
+          </div>
+          <div class="field">
+            <label for="pH">
+              Soil pH <span class="unit">(pH units)</span>
+              <span class="hint">Typical range: 4.5–8.5</span>
+            </label>
+            <input type="number" id="pH" name="pH" step="any" min="0" max="14" placeholder="e.g. 6.8" />
+          </div>
+          <div class="field">
+            <label for="runoffCurveNumber">
+              Runoff Curve Number <span class="unit">(dimensionless)</span>
+              <span class="hint">SCS curve number (0–100)</span>
+            </label>
+            <input type="number" id="runoffCurveNumber" name="runoffCurveNumber" step="1" min="0" max="100" placeholder="e.g. 65" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Management Practices ───────────────────────────────── -->
+      <div class="card">
+        <h2><span class="icon">🚜</span> Management Practices</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="plantingDate">
+              Planting Date <span style="color:#ef5350">*</span>
+            </label>
+            <input type="date" id="plantingDate" name="plantingDate" required />
+          </div>
+          <div class="field">
+            <label for="plantDensity">
+              Plant Density <span class="unit">(plants/m²)</span>
+              <span class="hint">Population at establishment</span>
+            </label>
+            <input type="number" id="plantDensity" name="plantDensity" step="any" min="0" placeholder="e.g. 7.2" />
+          </div>
+          <div class="field">
+            <label for="rowSpacing">
+              Row Spacing <span class="unit">(cm)</span>
+            </label>
+            <input type="number" id="rowSpacing" name="rowSpacing" step="any" min="0" placeholder="e.g. 75" />
+          </div>
+          <div class="field">
+            <label for="initialSoilWater">
+              Initial Soil Water <span class="unit">(% of AWC)</span>
+              <span class="hint">% of available water capacity at planting</span>
+            </label>
+            <input type="number" id="initialSoilWater" name="initialSoilWater" step="any" min="0" max="100" placeholder="e.g. 50" />
+          </div>
+          <div class="field">
+            <label for="nitrogenFertilizer">
+              Nitrogen Fertilizer <span class="unit">(kg N/ha)</span>
+              <span class="hint">Total N applied across all applications</span>
+            </label>
+            <input type="number" id="nitrogenFertilizer" name="nitrogenFertilizer" step="any" min="0" placeholder="e.g. 120" />
+          </div>
+          <div class="field">
+            <label for="fertilizerDate">Fertilizer Application Date</label>
+            <input type="date" id="fertilizerDate" name="fertilizerDate" />
+          </div>
+          <div class="field">
+            <label for="irrigationAmount">
+              Irrigation Amount <span class="unit">(mm)</span>
+              <span class="hint">Total irrigation applied across season</span>
+            </label>
+            <input type="number" id="irrigationAmount" name="irrigationAmount" step="any" min="0" placeholder="e.g. 200" />
+          </div>
+          <div class="field">
+            <label for="irrigationDate">First Irrigation Date</label>
+            <input type="date" id="irrigationDate" name="irrigationDate" />
+          </div>
+        </div>
+      </div>
+
+      <div class="submit-area">
+        <button type="submit" id="submitBtn">Submit Field Data</button>
+        <div id="feedback"></div>
+      </div>
+    </form>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('dssatForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const feedback = document.getElementById('feedback');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Validate required fields
+      let valid = true;
+      form.querySelectorAll('[required]').forEach(el => {
+        el.classList.remove('invalid');
+        if (!el.value.trim()) {
+          el.classList.add('invalid');
+          valid = false;
+        }
+      });
+
+      // Validate numeric range fields
+      const rangeFields = [
+        { id: 'pH', min: 0, max: 14, label: 'Soil pH' },
+        { id: 'runoffCurveNumber', min: 0, max: 100, label: 'Runoff Curve Number' },
+        { id: 'fieldCapacity', min: 0, max: 1, label: 'Field Capacity' },
+        { id: 'wiltingPoint', min: 0, max: 1, label: 'Wilting Point' },
+        { id: 'initialSoilWater', min: 0, max: 100, label: 'Initial Soil Water' },
+        { id: 'bulkDensity', min: 0, max: null, label: 'Bulk Density' },
+        { id: 'P1', min: 0, max: null, label: 'P1' },
+        { id: 'P2', min: 0, max: null, label: 'P2' },
+        { id: 'P5', min: 0, max: null, label: 'P5' },
+        { id: 'G2', min: 0, max: null, label: 'G2' },
+        { id: 'G3', min: 0, max: null, label: 'G3' },
+        { id: 'PHINT', min: 0, max: null, label: 'PHINT' },
+      ];
+      const rangeErrors = [];
+      rangeFields.forEach(({ id, min, max, label }) => {
+        const el = document.getElementById(id);
+        if (!el || el.value.trim() === '') return;
+        const num = parseFloat(el.value);
+        el.classList.remove('invalid');
+        if (isNaN(num) || (min != null && num < min) || (max != null && num > max)) {
+          el.classList.add('invalid');
+          rangeErrors.push(`${label} must be between ${min ?? '−∞'} and ${max ?? '+∞'}`);
+          valid = false;
+        }
+      });
+
+      if (!valid) {
+        const msg = rangeErrors.length > 0
+          ? 'Please fix the highlighted fields: ' + rangeErrors.join('; ')
+          : 'Please fill in all required fields (highlighted in red).';
+        showFeedback(msg, 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      hideFeedback();
+
+      const formData = new FormData(form);
+      const body = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch('/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          showFeedback('✅ ' + json.message, 'success');
+          form.reset();
+        } else {
+          showFeedback('❌ ' + (json.message || 'Submission failed.'), 'error');
+        }
+      } catch {
+        showFeedback('❌ Network error. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Field Data';
+      }
+    });
+
+    function showFeedback(msg, type) {
+      feedback.textContent = msg;
+      feedback.className = type;
+      feedback.style.display = 'block';
+      feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function hideFeedback() {
+      feedback.style.display = 'none';
+      feedback.className = '';
+    }
+  </script>
+</body>
+</html>
