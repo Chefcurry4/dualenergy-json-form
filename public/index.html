@@ -498,7 +498,7 @@
       const body = Object.fromEntries(formData.entries());
 
       try {
-        const res = await fetch('/submit', {
+        const res = await fetch('/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
